@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace ATMSimulator {
-  public class Singleton {
-    private static Singleton _instance;
+  public class ATM {
+    private static ATM _instance;
     private User _currentUser;
     private readonly List<User> _users;
     private readonly decimal _minimumValidAmount = 0;
 
-    private Singleton() {
+    private ATM() {
       _users = new List<User> {
         new User("Павел", "6767", 67000),
         new User("Кирилл", "5252", 5200),
@@ -17,12 +17,11 @@ namespace ATMSimulator {
       };
     }
 
-    public static Singleton Instance {
+    public static ATM Instance {
       get {
         if (_instance == null) {
-          _instance = new Singleton();
+          _instance = new ATM();
         }
-
         return _instance;
       }
     }
