@@ -21,12 +21,13 @@ namespace ATMSimulator {
         if (_instance == null) {
           _instance = new Singleton();
         }
+
         return _instance;
       }
     }
 
     public bool Login(string userName, string pinCode) {
-      _currentUser = _users.FirstOrDefault(u => u.Name == userName && u.PinCode == pinCode);
+      _currentUser = _users.FirstOrDefault(u => string.Equals(u.Name, userName, StringComparison.OrdinalIgnoreCase) && u.PinCode == pinCode);
       
       if (_currentUser != null) {
         Console.WriteLine($"Добро пожаловать, {_currentUser.Name}!");
@@ -36,6 +37,22 @@ namespace ATMSimulator {
       
       Console.WriteLine("Неверный PIN-код!");
       return false;
+    }
+
+    private bool IsUserLoggedIn() {
+      if (_currentUser == null) {
+        Console.WriteLine("Вы не вошли в систему");
+        return false;
+      }
+      return true;
+    }
+
+    private bool IsAmountValid(decimal amount) {
+      if (amount <= _minimumValidAmount) {
+        Console.WriteLine("Сумма должна быть больше 0!");
+        return false;
+      }
+      return true;
     }
 
     public void ShowBalance() {
@@ -95,7 +112,7 @@ namespace ATMSimulator {
       var allUsers = GetAllUsers();
       int userNumber = 1;
       foreach (string userName in allUsers) {
-        if (userName != _currentUser.Name) {
+        if (!string.Equals(userName, _currentUser.Name, StringComparison.OrdinalIgnoreCase)) {
           Console.WriteLine($"{userNumber}. {userName}");
         }
         userNumber++;
@@ -104,14 +121,14 @@ namespace ATMSimulator {
       Console.Write("Введите имя получателя: ");
       string targetUserName = Console.ReadLine();
 
-      User targetUser = _users.FirstOrDefault(u => u.Name == targetUserName);
+      User targetUser = _users.FirstOrDefault(u => string.Equals(u.Name, targetUserName, StringComparison.OrdinalIgnoreCase));
 
       if (targetUser == null) {
         Console.WriteLine("Пользователь не найден!");
         return;
       }
 
-      if (targetUser.Name == _currentUser.Name) {
+      if (string.Equals(targetUser.Name, _currentUser.Name, StringComparison.OrdinalIgnoreCase)) {
         Console.WriteLine("Нельзя перевести деньги самому себе!");
         return;
       }
@@ -144,22 +161,6 @@ namespace ATMSimulator {
 
     public List<string> GetAllUsers() {
       return _users.Select(u => u.Name).ToList();
-    }
-
-    private bool IsUserLoggedIn() {
-      if (_currentUser == null) {
-        Console.WriteLine("Вы не вошли в систему");
-        return false;
-      }
-      return true;
-    }
-
-    private bool IsAmountValid(decimal amount) {
-      if (amount <= _minimumValidAmount) {
-        Console.WriteLine("Сумма должна быть больше 0!");
-        return false;
-      }
-      return true;
     }
   }
 }
