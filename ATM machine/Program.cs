@@ -8,7 +8,7 @@ namespace ATMSimulator {
 
       Console.WriteLine("=== БАНКОМАТ ===\n");
 
-      ATM atm = ATM.Instance;
+      Singleton atm = Singleton.Instance;
 
       bool isLoggedIn = false;
       int loginAttempts = 0;
@@ -47,7 +47,7 @@ namespace ATMSimulator {
       }
 
       while (true) {
-        Console.WriteLine("\n1-Баланс \n2-Внести \n3-Снять \n4-Перевести 5-Выйти");
+        Console.WriteLine("\n1-Баланс \n2-Внести \n3-Снять \n4-Перевести \n5-Выйти");
         Console.Write("Выбор: ");
         string userChoice = Console.ReadLine();
 
