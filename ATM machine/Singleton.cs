@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ATMSimulator {
   public class Singleton {
     private static Singleton _instance;
-    private Dictionary<string, decimal> _userBalances;
+    private readonly List<User> _users;
+    private User _currentUser;
+    private readonly decimal _minimumValidAmount = 0;
 
     private Singleton() {
-      _userBalances = new Dictionary<string, decimal> {
-        { "user1", 1000 },
-        { "user2", 500 },
-        { "user3", 2500 }
-      };
+      _users = new List<User>();
+      _users.Add(new User("Павел", "6767", 67000));
+      _users.Add(new User("Кирилл", "5252", 5200));
+      _users.Add(new User("Никита", "4242", 4200));
     }
 
     public static Singleton Instance {
@@ -19,93 +21,145 @@ namespace ATMSimulator {
         if (_instance == null) {
           _instance = new Singleton();
         }
-
         return _instance;
       }
     }
 
-    public decimal GetBalance(string userName) {
-      if (_userBalances.ContainsKey(userName)) {
-        return _userBalances[userName];
+    public bool Login(string userName, string pinCode) {
+      _currentUser = _users.FirstOrDefault(u => u.Name == userName && u.PinCode == pinCode);
+      
+      if (_currentUser != null) {
+        Console.WriteLine($"Добро пожаловать, {_currentUser.Name}!");
+        Console.WriteLine($"Ваш текущий баланс: {_currentUser.Balance} руб.\n");
+        return true;
       }
-
-      Console.WriteLine("Пользователь не найден!");
-      return 0;
+      
+      Console.WriteLine("Неверный PIN-код!");
+      return false;
     }
 
-    public bool Deposit(string userName, decimal depositAmount) {
-      decimal minimumValidAmount = 0;
+    public void ShowBalance() {
+      if (!IsUserLoggedIn()) return;
+      Console.WriteLine($"\nВаш баланс: {_currentUser.Balance} руб.");
+    }
 
-      if (!_userBalances.ContainsKey(userName)) {
+    public void Deposit() {
+      if (!IsUserLoggedIn()) return;
+
+      Console.WriteLine($"\nТекущий баланс: {_currentUser.Balance} руб.");
+      Console.Write("Введите сумму для внесения: ");
+      
+      bool isAmountValid = decimal.TryParse(Console.ReadLine(), out decimal depositAmount);
+      
+      if (!isAmountValid) {
+        Console.WriteLine("Неверный формат суммы!");
+        return;
+      }
+
+      if (!IsAmountValid(depositAmount)) return;
+
+      _currentUser.Balance += depositAmount;
+      Console.WriteLine($"Внесено {depositAmount} руб. Новый баланс: {_currentUser.Balance} руб.");
+    }
+
+    public void Withdraw() {
+      if (!IsUserLoggedIn()) return;
+
+      Console.WriteLine($"\nТекущий баланс: {_currentUser.Balance} руб.");
+      Console.Write("Введите сумму для снятия: ");
+      
+      bool isAmountValid = decimal.TryParse(Console.ReadLine(), out decimal withdrawAmount);
+      
+      if (!isAmountValid) {
+        Console.WriteLine("Неверный формат суммы!");
+        return;
+      }
+
+      if (!IsAmountValid(withdrawAmount)) return;
+
+      if (withdrawAmount > _currentUser.Balance) {
+        Console.WriteLine($"Недостаточно средств! Доступно: {_currentUser.Balance} руб.");
+        return;
+      }
+
+      _currentUser.Balance -= withdrawAmount;
+      Console.WriteLine($"Снято {withdrawAmount} руб. Остаток: {_currentUser.Balance} руб.");
+    }
+
+    public void Transfer() {
+      if (!IsUserLoggedIn()) return;
+
+      Console.WriteLine($"\nТекущий баланс: {_currentUser.Balance} руб.");
+      Console.WriteLine("\n--- Список пользователей для перевода ---");
+      
+      var allUsers = GetAllUsers();
+      int userNumber = 1;
+      foreach (string userName in allUsers) {
+        if (userName != _currentUser.Name) {
+          Console.WriteLine($"{userNumber}. {userName}");
+        }
+        userNumber++;
+      }
+
+      Console.Write("Введите имя получателя: ");
+      string targetUserName = Console.ReadLine();
+
+      User targetUser = _users.FirstOrDefault(u => u.Name == targetUserName);
+
+      if (targetUser == null) {
         Console.WriteLine("Пользователь не найден!");
-        return false;
+        return;
       }
 
-      if (depositAmount <= minimumValidAmount) {
-        Console.WriteLine("Сумма должна быть больше 0!");
-        return false;
+      if (targetUser.Name == _currentUser.Name) {
+        Console.WriteLine("Нельзя перевести деньги самому себе!");
+        return;
       }
 
-      _userBalances[userName] += depositAmount;
-      Console.WriteLine($"Внесено {depositAmount} руб. Баланс: {_userBalances[userName]} руб.");
-      return true;
+      Console.Write("Введите сумму перевода: ");
+      bool isAmountValid = decimal.TryParse(Console.ReadLine(), out decimal transferAmount);
+      
+      if (!isAmountValid) {
+        Console.WriteLine("Неверный формат суммы!");
+        return;
+      }
+
+      if (!IsAmountValid(transferAmount)) return;
+
+      if (transferAmount > _currentUser.Balance) {
+        Console.WriteLine($"Недостаточно средств! Доступно: {_currentUser.Balance} руб.");
+        return;
+      }
+
+      _currentUser.Balance -= transferAmount;
+      targetUser.Balance += transferAmount;
+      Console.WriteLine($"\nПереведено {transferAmount} руб. пользователю {targetUser.Name}");
+      Console.WriteLine($"Ваш новый баланс: {_currentUser.Balance} руб.");
     }
 
-    public bool Withdraw(string userName, decimal withdrawAmount) {
-      decimal minimumValidAmount = 0;
-      decimal currentBalance = _userBalances[userName];
-
-      if (!_userBalances.ContainsKey(userName)) {
-        Console.WriteLine("Пользователь не найден!");
-        return false;
-      }
-
-      if (withdrawAmount <= minimumValidAmount) {
-        Console.WriteLine("Сумма должна быть больше 0!");
-        return false;
-      }
-
-      if (currentBalance < withdrawAmount) {
-        Console.WriteLine("Недостаточно средств!");
-        return false;
-      }
-
-      _userBalances[userName] -= withdrawAmount;
-      Console.WriteLine($"Снято {withdrawAmount} руб. Баланс: {_userBalances[userName]} руб.");
-      return true;
-    }
-
-    public bool Transfer(string fromUserName, string toUserName, decimal transferAmount) {
-      decimal minimumValidAmount = 0;
-
-      if (!_userBalances.ContainsKey(fromUserName)) {
-        Console.WriteLine("Отправитель не найден!");
-        return false;
-      }
-
-      if (!_userBalances.ContainsKey(toUserName)) {
-        Console.WriteLine("Получатель не найден!");
-        return false;
-      }
-
-      if (transferAmount <= minimumValidAmount) {
-        Console.WriteLine("Сумма должна быть больше 0!");
-        return false;
-      }
-
-      if (_userBalances[fromUserName] < transferAmount) {
-        Console.WriteLine("Недостаточно средств для перевода!");
-        return false;
-      }
-
-      _userBalances[fromUserName] -= transferAmount;
-      _userBalances[toUserName] += transferAmount;
-      Console.WriteLine($"Переведено {transferAmount} руб. от {fromUserName} к {toUserName}");
-      return true;
+    public void Logout() {
+      _currentUser = null;
+      Console.WriteLine("Вы вышли из системы.");
     }
 
     public List<string> GetAllUsers() {
-      return new List<string>(_userBalances.Keys);
+      return _users.Select(u => u.Name).ToList();
+    }
+
+    private bool IsUserLoggedIn() {
+      if (_currentUser == null) {
+        Console.WriteLine("Вы не вошли в систему");
+        return false;
+      }
+      return true;
+    }
+
+    private bool IsAmountValid(decimal amount) {
+      if (amount <= _minimumValidAmount) {
+        Console.WriteLine("Сумма должна быть больше 0!");
+        return false;
+      }
+      return true;
     }
   }
 }
