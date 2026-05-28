@@ -5,8 +5,8 @@ using System.Linq;
 namespace ATMSimulator {
   public class Singleton {
     private static Singleton _instance;
-    private readonly List<User> _users;
     private User _currentUser;
+    private readonly List<User> _users;
     private readonly decimal _minimumValidAmount = 0;
 
     private Singleton() {
