@@ -10,10 +10,11 @@ namespace ATMSimulator {
     private readonly decimal _minimumValidAmount = 0;
 
     private Singleton() {
-      _users = new List<User>();
-      _users.Add(new User("Павел", "6767", 67000));
-      _users.Add(new User("Кирилл", "5252", 5200));
-      _users.Add(new User("Никита", "4242", 4200));
+      _users = new List<User> {
+        new User("Павел", "6767", 67000),
+        new User("Кирилл", "5252", 5200),
+        new User("Никита", "4242", 4200)
+      };
     }
 
     public static Singleton Instance {
