@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace ATMSimulator {
-  public class ATM {
-    private static ATM _instance;
+  public class Singleton {
+    private static Singleton _instance;
     private User _currentUser;
     private readonly List<User> _users;
     private readonly decimal _minimumValidAmount = 0;
 
-    private ATM() {
+    private Singleton() {
       _users = new List<User> {
         new User("Павел", "6767", 67000),
         new User("Кирилл", "5252", 5200),
@@ -17,10 +17,10 @@ namespace ATMSimulator {
       };
     }
 
-    public static ATM Instance {
+    public static Singleton Instance {
       get {
         if (_instance == null) {
-          _instance = new ATM();
+          _instance = new Singleton();
         }
         return _instance;
       }
@@ -114,8 +114,8 @@ namespace ATMSimulator {
       foreach (string userName in allUsers) {
         if (!string.Equals(userName, _currentUser.Name, StringComparison.OrdinalIgnoreCase)) {
           Console.WriteLine($"{userNumber}. {userName}");
+          userNumber++;
         }
-        userNumber++;
       }
 
       Console.Write("Введите имя получателя: ");

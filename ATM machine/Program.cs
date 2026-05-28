@@ -75,7 +75,7 @@ namespace ATMSimulator {
       }
 
       atm.Logout();
-      Console.WriteLine("Спасибо за использование!");
+      Console.WriteLine("Досвидания!");
       Console.ReadKey();
     }
   }
